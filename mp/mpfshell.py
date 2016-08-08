@@ -33,6 +33,7 @@ import platform
 import sys
 import serial
 import logging
+import readline
 
 from mp import version
 from mp.mpfexp import MpFileExplorer
@@ -62,6 +63,8 @@ class MpFileShell(cmd.Cmd):
 
         self.__intro()
         self.__set_prompt_path()
+
+        readline.set_completer_delims(" ")
 
     def __del__(self):
         self.__disconnect()
@@ -286,7 +289,7 @@ class MpFileShell(cmd.Cmd):
         List files in current local directory.
         """
 
-        files = os.listdir(".")
+        files = [f for f in os.listdir(".") if not f.startswith(".")]
 
         print("\nLocal files:\n")
 
@@ -325,8 +328,12 @@ class MpFileShell(cmd.Cmd):
                 self.__error(str(e).split("] ")[-1])
 
     def complete_lcd(self, *args):
-        dirs = [o for o in os.listdir(".") if os.path.isdir(os.path.join(".", o))]
-        return [i for i in dirs if i.startswith(args[0])]
+        if args[0] == "..":
+            return ["../"]
+        folder, toComplete = os.path.split(args[0])
+        path = os.path.abspath(folder)
+        dirs = [o for o in os.listdir(path) if os.path.isdir(os.path.join(path, o))]
+        return [os.path.join(folder, i, "") for i in dirs if i.startswith(toComplete)]
 
     def do_lpwd(self, args):
         """lpwd
