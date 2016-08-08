@@ -289,7 +289,10 @@ class MpFileShell(cmd.Cmd):
         List files in current local directory.
         """
 
-        files = [f for f in os.listdir(".") if not f.startswith(".")]
+        if "-a" in args:
+            files = [f for f in os.listdir(".")]
+        else:
+            files = [f for f in os.listdir(".") if not f.startswith(".")]
 
         print("\nLocal files:\n")
 
@@ -328,8 +331,11 @@ class MpFileShell(cmd.Cmd):
                 self.__error(str(e).split("] ")[-1])
 
     def complete_lcd(self, *args):
+        # Complete .. -> ../ (Bash behaves this way as well)
         if args[0] == "..":
             return ["../"]
+        # Split path into last part (we match against this)
+        # and everything which comes before (we search in this folder)
         folder, toComplete = os.path.split(args[0])
         path = os.path.abspath(folder)
         dirs = [o for o in os.listdir(path) if os.path.isdir(os.path.join(path, o))]
